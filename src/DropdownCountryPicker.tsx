@@ -1,5 +1,5 @@
 import React, { useEffect, useRef, useState } from "react";
-import Flag from "react-native-flags";
+import Flag from "react-native-country-flag";
 import {
   FlatList,
   NativeSyntheticEvent,
@@ -74,7 +74,7 @@ export default function DropdownCountyPicker({
           }
         >
           <View>
-            <Flag code={item} size={flagSize ? flagSize : 24} />
+            <Flag isoCode={item} size={flagSize ? flagSize : 24} />
           </View>
           <Text
             style={
@@ -122,7 +122,7 @@ export default function DropdownCountyPicker({
         }
       >
         {CountryCodes.includes(iso) && CountryNames.includes(term) ? (
-          <Flag code={iso} size={24} />
+          <Flag isoCode={iso} size={24} />
         ) : null}
         <TextInput
           style={
