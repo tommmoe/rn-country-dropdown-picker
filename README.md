@@ -7,9 +7,11 @@ A fully customizable react native component that displays the flag and name of t
 |![](https://github.com/faccon/rn-country-dropdown-picker/blob/master/src/docs/rn-country-dropdown-picker.gif)|![](https://github.com/faccon/rn-country-dropdown-picker/blob/master/src/docs/rn-country-dropdown-picker2.gif)|
 
 
+## Forked to use react-native-country-flag instead
+
 ## Installation
 
-1. `npm i react-native-flags` install peer dependencies
+1. `npm i react-native-country-flag` install peer dependencies
 2. `npm i rn-country-dropdown-picker`
 
 
