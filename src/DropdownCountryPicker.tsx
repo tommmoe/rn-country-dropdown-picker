@@ -3,13 +3,13 @@ import Flag from "react-native-country-flag";
 import {
   FlatList,
   NativeSyntheticEvent,
-  TextInput,
   TextInputChangeEventData,
   TouchableOpacity,
   View,
-  Text,
   StyleSheet,
 } from "react-native";
+import Text from "../src/Components/Text";
+import TextInput from "../src/Components/TextInput";
 import { CountryCodes, CountryNames } from "./data";
 import * as AllFunctions from "./functions";
 import { RenderComProp, RProps } from "rn-country-dropdown-picker";
