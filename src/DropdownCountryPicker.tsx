@@ -3,17 +3,14 @@ import Flag from "react-native-country-flag";
 import {
   FlatList,
   NativeSyntheticEvent,
-  StyleProp,
-  StyleSheet,
-  Text,
   TextInput,
   TextInputChangeEventData,
-  TextStyle,
   TouchableOpacity,
   View,
-  ViewStyle,
+  Text,
+  StyleSheet,
 } from "react-native";
-import { CountryCodes, countryData, CountryNames } from "./data";
+import { CountryCodes, CountryNames } from "./data";
 import * as AllFunctions from "./functions";
 import { RenderComProp, RProps } from "rn-country-dropdown-picker";
 
@@ -27,14 +24,26 @@ export default function DropdownCountyPicker({
   flagSize,
   Placeholder,
   selectedItem,
-}: RProps) {
+  resetKey, // Change from 'reset' to 'resetKey' as a unique identifier
+}: RProps & { resetKey: string }) {
   const [term, setTerm] = useState<string>("");
   const [iso, setISO] = useState<string>("");
   const [Fheight, setFheight] = useState<number>(250);
   const [opacity, setOpacity] = useState<number>(0);
-  const [refresh, setRefresh] = useState<boolean>();
+  const [refresh, setRefresh] = useState<boolean>(false);
+
   const filteredCodes = useRef<string[]>();
-  let code = useRef<string>();
+
+  useEffect(() => {
+    setTerm("");            // Clear the input
+    setISO("");             // Clear the selected ISO
+    setFheight(0);          // Close the dropdown
+    setOpacity(0);          // Hide the dropdown
+    filteredCodes.current = CountryCodes; // Reset the filtered codes
+    setRefresh(prev => !prev);  // Trigger re-render
+    selectedItem({ country: "", code: "" }); // Reset the selected item
+  }, [resetKey]);  // Dependency on resetKey change
+  
 
   const DropdownContainerStyleDefault: object = {
     opacity,
@@ -46,13 +55,11 @@ export default function DropdownCountyPicker({
   };
 
   const renderItem: React.FC<RenderComProp> = ({ item }) => {
-    let name = AllFunctions.getName(item);
+    const name = AllFunctions.getName(item);
 
     function CountrySelected(item: string) {
-      let name = AllFunctions.getName(item);
-      if (typeof name === "undefined") {
-        return;
-      } else {
+      const name = AllFunctions.getName(item);
+      if (name) {
         setISO(item);
         setTerm(name);
         selectedItem({ country: name, code: item });
@@ -73,9 +80,7 @@ export default function DropdownCountyPicker({
               : [styles.RowView, styles.RowStyleDefault]
           }
         >
-          <View>
-            <Flag isoCode={item} size={flagSize ? flagSize : 24} />
-          </View>
+          <Flag isoCode={item} size={flagSize || 24} />
           <Text
             style={
               DropdownCountryTextStyle
@@ -91,25 +96,26 @@ export default function DropdownCountyPicker({
   };
 
   const searchFilter = (e: NativeSyntheticEvent<TextInputChangeEventData>) => {
-    if (e.nativeEvent.text.length > 0) {
+    const input = e.nativeEvent.text;
+    setTerm(input);
+    setISO("");
+    if (input.length > 0) {
       setFheight(250);
       setOpacity(1);
     } else {
       setFheight(0);
       setOpacity(0);
     }
-    setISO("");
-    setTerm(e.nativeEvent.text);
     const convertedCodes: string[] = [];
-    const res = CountryNames.filter((item) => {
-      return item.toLowerCase().includes(e.nativeEvent.text.toLowerCase());
-    });
+    const res = CountryNames.filter((item) =>
+      item.toLowerCase().includes(input.toLowerCase())
+    );
     res.forEach((e) => {
-      code.current = AllFunctions.getCode(e);
-      convertedCodes.push(code.current!);
+      const code = AllFunctions.getCode(e);
+      convertedCodes.push(code!);
     });
     filteredCodes.current = convertedCodes;
-    setRefresh(!refresh);
+    setRefresh(prev => !prev);
   };
 
   return (
@@ -138,7 +144,7 @@ export default function DropdownCountyPicker({
                   },
                 ]
           }
-          placeholder={Placeholder ? Placeholder : "Select Country..."}
+          placeholder={Placeholder || "Select Country..."}
           placeholderTextColor="black"
           value={term}
           onChange={searchFilter}
@@ -188,7 +194,6 @@ const styles = StyleSheet.create({
     paddingStart: 15,
     color: "black",
   },
-
   RowView: {
     flex: 1,
     borderBottomWidth: 1,
