@@ -8,8 +8,8 @@ import {
   View,
   StyleSheet,
 } from "react-native";
-import Text from "../src/Components/Text";
-import TextInput from "../src/Components/TextInput";
+import Text from "../../../src/components/Text";
+import TextInput from "../../../src/components/TextInput";
 import { CountryCodes, CountryNames } from "./data";
 import * as AllFunctions from "./functions";
 import { RenderComProp, RProps } from "rn-country-dropdown-picker";
@@ -24,34 +24,40 @@ export default function DropdownCountyPicker({
   flagSize,
   Placeholder,
   selectedItem,
+  initialValue,
   resetKey, // Change from 'reset' to 'resetKey' as a unique identifier
 }: RProps & { resetKey: string }) {
   const [term, setTerm] = useState<string>("");
-  const [iso, setISO] = useState<string>("");
-  const [Fheight, setFheight] = useState<number>(250);
-  const [opacity, setOpacity] = useState<number>(0);
+  const [iso, setISO] = useState<string>(initialValue || "");
+  const [isOpen, setIsOpen] = useState<boolean>(false);
   const [refresh, setRefresh] = useState<boolean>(false);
 
-  const filteredCodes = useRef<string[]>();
+  const filteredCodes = useRef<string[]>(CountryCodes);
+
+  useEffect(() => {
+    if (initialValue) {
+      const name = AllFunctions.getName(initialValue);
+      setISO(initialValue);
+      setTerm(name);
+      selectedItem({ country: name, code: initialValue });
+    }
+  }, [initialValue]);
 
   useEffect(() => {
     setTerm("");            // Clear the input
     setISO("");             // Clear the selected ISO
-    setFheight(0);          // Close the dropdown
-    setOpacity(0);          // Hide the dropdown
+    setIsOpen(false);       // Close the dropdown
     filteredCodes.current = CountryCodes; // Reset the filtered codes
     setRefresh(prev => !prev);  // Trigger re-render
     selectedItem({ country: "", code: "" }); // Reset the selected item
   }, [resetKey]);  // Dependency on resetKey change
-  
 
   const DropdownContainerStyleDefault: object = {
-    opacity,
+    maxHeight: isOpen ? 250 : 0,
+    overflow: "hidden",
+    opacity: isOpen ? 1 : 0,
     width: "100%",
-    borderWidth: 0.5,
-    borderTopWidth: 0,
-    borderBottomWidth: Fheight > 0 ? 0.5 : 0,
-    maxHeight: Fheight,
+    borderWidth: isOpen ? 0.5 : 0,
   };
 
   const renderItem: React.FC<RenderComProp> = ({ item }) => {
@@ -63,7 +69,7 @@ export default function DropdownCountyPicker({
         setISO(item);
         setTerm(name);
         selectedItem({ country: name, code: item });
-        setFheight(0);
+        setIsOpen(false);  // Close dropdown after selection
       }
     }
 
@@ -100,11 +106,9 @@ export default function DropdownCountyPicker({
     setTerm(input);
     setISO("");
     if (input.length > 0) {
-      setFheight(250);
-      setOpacity(1);
+      setIsOpen(true); // Open dropdown when input has text
     } else {
-      setFheight(0);
-      setOpacity(0);
+      setIsOpen(false); // Close dropdown when input is cleared
     }
     const convertedCodes: string[] = [];
     const res = CountryNames.filter((item) =>
@@ -127,7 +131,7 @@ export default function DropdownCountyPicker({
             : styles.InputField
         }
       >
-        {CountryCodes.includes(iso) && CountryNames.includes(term) ? (
+        {iso ? (
           <Flag isoCode={iso} size={24} />
         ) : null}
         <TextInput
@@ -138,7 +142,7 @@ export default function DropdownCountyPicker({
                   styles.countryNameStyle,
                   {
                     paddingStart:
-                      CountryCodes.includes(iso) && CountryNames.includes(term)
+                      iso
                         ? 20
                         : 0,
                   },
@@ -148,6 +152,8 @@ export default function DropdownCountyPicker({
           placeholderTextColor="black"
           value={term}
           onChange={searchFilter}
+          onFocus={() => setIsOpen(true)} // Open dropdown on focus
+          onBlur={() => setIsOpen(false)} // Close dropdown on blur
         />
       </View>
       <FlatList
@@ -156,9 +162,7 @@ export default function DropdownCountyPicker({
             ? [DropdownContainerStyle, DropdownContainerStyleDefault]
             : [DropdownContainerStyleDefault]
         }
-        data={
-          filteredCodes.current === null ? CountryCodes : filteredCodes.current
-        }
+        data={filteredCodes.current}
         keyExtractor={(item, index) => index.toString()}
         renderItem={renderItem}
         extraData={refresh}
