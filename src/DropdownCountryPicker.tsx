@@ -25,10 +25,10 @@ export default function DropdownCountyPicker({
   Placeholder,
   selectedItem,
   initialValue,
-  resetKey, // Change from 'reset' to 'resetKey' as a unique identifier
+  resetKey,
 }: RProps & { resetKey: string }) {
   const [term, setTerm] = useState<string>("");
-  const [iso, setISO] = useState<string>(initialValue || "");
+  const [iso, setISO] = useState<string>("");
   const [isOpen, setIsOpen] = useState<boolean>(false);
   const [refresh, setRefresh] = useState<boolean>(false);
 
@@ -36,63 +36,50 @@ export default function DropdownCountyPicker({
 
   useEffect(() => {
     if (initialValue) {
-      const name = AllFunctions.getName(initialValue);
-      setISO(initialValue);
-      setTerm(name);
-      selectedItem({ country: name, code: initialValue });
+      updateCountrySelection(initialValue);
     }
   }, [initialValue]);
 
   useEffect(() => {
-    setTerm("");            // Clear the input
-    setISO("");             // Clear the selected ISO
-    setIsOpen(false);       // Close the dropdown
-    filteredCodes.current = CountryCodes; // Reset the filtered codes
-    setRefresh(prev => !prev);  // Trigger re-render
-    selectedItem({ country: "", code: "" }); // Reset the selected item
-  }, [resetKey]);  // Dependency on resetKey change
+    resetSelection();
+  }, [resetKey]);
 
-  const DropdownContainerStyleDefault: object = {
-    maxHeight: isOpen ? 250 : 0,
-    overflow: "hidden",
-    opacity: isOpen ? 1 : 0,
-    width: "100%",
-    borderWidth: isOpen ? 0.5 : 0,
+  const updateCountrySelection = (code: string) => {
+    const name = AllFunctions.getName(code);
+    setISO(code);
+    setTerm(name);
+    selectedItem({ country: name, code: code });
+    setIsOpen(false);
+  };
+
+  const resetSelection = () => {
+    setTerm("");
+    setISO("");
+    setIsOpen(false);
+    filteredCodes.current = CountryCodes;
+    setRefresh(prev => !prev);
+    selectedItem({ country: "", code: "" });
   };
 
   const renderItem: React.FC<RenderComProp> = ({ item }) => {
     const name = AllFunctions.getName(item);
 
-    function CountrySelected(item: string) {
-      const name = AllFunctions.getName(item);
-      if (name) {
-        setISO(item);
-        setTerm(name);
-        selectedItem({ country: name, code: item });
-        setIsOpen(false);  // Close dropdown after selection
-      }
-    }
-
     return (
       <TouchableOpacity
-        style={{ elevation: 10, zIndex: 10 }}
-        activeOpacity={0.8}
-        onPress={() => CountrySelected(item)}
+        style={[
+          styles.rowTouchable,
+          DropdownRowStyle,
+        ]}
+        activeOpacity={0.7}
+        onPress={() => updateCountrySelection(item)}
       >
-        <View
-          style={
-            DropdownRowStyle
-              ? [DropdownRowStyle, styles.RowStyleDefault]
-              : [styles.RowView, styles.RowStyleDefault]
-          }
-        >
+        <View style={styles.rowContent}>
           <Flag isoCode={item} size={flagSize || 24} />
           <Text
-            style={
-              DropdownCountryTextStyle
-                ? DropdownCountryTextStyle
-                : styles.DropdownCountryTextStyle
-            }
+            style={[
+              styles.DropdownCountryTextStyle,
+              DropdownCountryTextStyle,
+            ]}
           >
             {name}
           </Text>
@@ -105,31 +92,26 @@ export default function DropdownCountyPicker({
     const input = e.nativeEvent.text;
     setTerm(input);
     setISO("");
-    if (input.length > 0) {
-      setIsOpen(true); // Open dropdown when input has text
-    } else {
-      setIsOpen(false); // Close dropdown when input is cleared
-    }
-    const convertedCodes: string[] = [];
-    const res = CountryNames.filter((item) =>
-      item.toLowerCase().includes(input.toLowerCase())
-    );
-    res.forEach((e) => {
-      const code = AllFunctions.getCode(e);
-      convertedCodes.push(code!);
-    });
+    setIsOpen(input.length > 0);
+
+    const convertedCodes = CountryNames
+      .filter(item => item.toLowerCase().includes(input.toLowerCase()))
+      .map(e => AllFunctions.getCode(e)!)
+      .filter(Boolean);
+
     filteredCodes.current = convertedCodes;
     setRefresh(prev => !prev);
   };
 
   return (
     <View style={ContainerStyle ? ContainerStyle : styles.viewStyle}>
-      <View
+      <TouchableOpacity
         style={
           InputFieldStyle
             ? [InputFieldStyle, styles.InputFieldDefault]
             : styles.InputField
         }
+        onPress={() => setIsOpen(!isOpen)}
       >
         {iso ? (
           <Flag isoCode={iso} size={24} />
@@ -141,10 +123,7 @@ export default function DropdownCountyPicker({
               : [
                   styles.countryNameStyle,
                   {
-                    paddingStart:
-                      iso
-                        ? 20
-                        : 0,
+                    paddingStart: iso ? 20 : 0,
                   },
                 ]
           }
@@ -152,22 +131,27 @@ export default function DropdownCountyPicker({
           placeholderTextColor="black"
           value={term}
           onChange={searchFilter}
-          onFocus={() => setIsOpen(true)} // Open dropdown on focus
-          onBlur={() => setIsOpen(false)} // Close dropdown on blur
+          onFocus={() => setIsOpen(true)}
         />
-      </View>
+      </TouchableOpacity>
+      {isOpen && (
       <FlatList
-        style={
-          DropdownContainerStyle
-            ? [DropdownContainerStyle, DropdownContainerStyleDefault]
-            : [DropdownContainerStyleDefault]
-        }
+        style={[
+          styles.dropdownContainer,
+          DropdownContainerStyle,
+          {
+            maxHeight: isOpen ? 250 : 0,
+            opacity: isOpen ? 1 : 0,
+          }
+        ]}
         data={filteredCodes.current}
         keyExtractor={(item, index) => index.toString()}
         renderItem={renderItem}
         extraData={refresh}
         keyboardShouldPersistTaps="always"
+        nestedScrollEnabled={true}
       />
+      )}
     </View>
   );
 }
@@ -194,17 +178,8 @@ const styles = StyleSheet.create({
   DropdownCountryTextStyle: {
     fontSize: 20,
     marginVertical: 5,
-    width: "100%",
     paddingStart: 15,
     color: "black",
-  },
-  RowView: {
-    flex: 1,
-    borderBottomWidth: 1,
-    borderBottomColor: "gray",
-    justifyContent: "flex-start",
-    paddingHorizontal: 7,
-    width: "100%",
   },
   countryNameStyle: {
     paddingVertical: 8,
@@ -213,5 +188,19 @@ const styles = StyleSheet.create({
     flex: 1,
     color: "black",
   },
-  RowStyleDefault: { flexDirection: "row", alignItems: "center" },
+  dropdownContainer: {
+    width: "100%",
+    borderWidth: 0.5,
+  },
+  rowTouchable: {
+    width: "100%",
+    paddingVertical: 10,
+    paddingHorizontal: 15,
+    borderBottomWidth: 0.5,
+    borderBottomColor: "#ccc",
+  },
+  rowContent: {
+    flexDirection: "row",
+    alignItems: "center",
+  },
 });
