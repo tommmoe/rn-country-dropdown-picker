@@ -23,6 +23,7 @@ export default function DropdownCountyPicker({
   countryNameStyle,
   flagSize,
   Placeholder,
+  PlaceholderTextColor,
   selectedItem,
   initialValue,
   resetKey,
@@ -128,7 +129,7 @@ export default function DropdownCountyPicker({
                 ]
           }
           placeholder={Placeholder || "Select Country..."}
-          placeholderTextColor="black"
+          placeholderTextColor={PlaceholderTextColor || "#00000"}
           value={term}
           onChange={searchFilter}
           onFocus={() => setIsOpen(true)}
