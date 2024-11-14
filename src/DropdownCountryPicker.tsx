@@ -7,6 +7,7 @@ import {
   TouchableOpacity,
   View,
   StyleSheet,
+  Platform,
 } from "react-native";
 import Text from "../../../src/components/Text";
 import TextInput from "../../../src/components/TextInput";
@@ -70,22 +71,38 @@ export default function DropdownCountyPicker({
         setISO(item);
         setTerm(name);
         selectedItem({ country: name, code: item });
-        setIsOpen(false);  // Close dropdown after selection
+        setIsOpen(false);
       }
     }
 
     return (
       <TouchableOpacity
-        style={{ elevation: 10, zIndex: 10 }}
+        style={[
+          {
+            width: '100%',
+            minHeight: 44,
+          },
+          Platform.select({
+            ios: {
+              backgroundColor: 'transparent',
+            }
+          })
+        ]}
         activeOpacity={0.8}
-        onPress={() => CountrySelected(item)}
+        onPress={() => {
+          console.log('Country selected:', item);
+          CountrySelected(item);
+        }}
       >
         <View
-          style={
+          style={[
             DropdownRowStyle
               ? [DropdownRowStyle, styles.RowStyleDefault]
-              : [styles.RowView, styles.RowStyleDefault]
-          }
+              : [styles.RowView, styles.RowStyleDefault],
+            { minHeight: 44,
+              width: '100%'
+             }
+          ]}
         >
           <Flag isoCode={item} size={flagSize || 24} />
           <Text
@@ -158,15 +175,21 @@ export default function DropdownCountyPicker({
         />
       </View>
       <FlatList
-        style={
+        style={[
           DropdownContainerStyle
             ? [DropdownContainerStyle, DropdownContainerStyleDefault]
-            : [DropdownContainerStyleDefault]
-        }
+            : [DropdownContainerStyleDefault],
+          Platform.select({
+            ios: {
+              zIndex: 999
+            }
+          })
+        ]}
         data={filteredCodes.current}
         keyExtractor={(item, index) => index.toString()}
         renderItem={renderItem}
         extraData={refresh}
+        nestedScrollEnabled={true}
         keyboardShouldPersistTaps="always"
       />
     </View>
