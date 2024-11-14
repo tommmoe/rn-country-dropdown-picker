@@ -19,6 +19,7 @@ declare module 'rn-country-dropdown-picker' {
     flagSize?: number
     flagType?: string
     Placeholder?: string
+    PlaceholderTextColor?: string
     selectedItem: (e: ItemProps) => void
   }
 
