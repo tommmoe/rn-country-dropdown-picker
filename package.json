@@ -1,7 +1,6 @@
 {
   "peerDependencies": {
-    "react": "*",
-    "react-dom": "*"
+    "react": "*"
   },
   "devDependencies": {
     "@babel/core": "^7.9.0",
